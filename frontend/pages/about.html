@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tech Turf - About Us</title>
+
+    <!-- External Libraries -->
+    <link rel="stylesheet" href="/src/css/tailwind.generated.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Our New Centralized Files -->
+    <link rel="stylesheet" href="/src/css/pages/style.css">
+    <script src="/src/js/core/layout.js" defer></script>
+    <script src="/src/js/pages/about-team.js" defer></script>
+</head>
+<!-- 
+  data-page="About" tells layout.js which nav link to highlight.
+  data-3d-enabled="true" tells layout.js to load the 3D background.
+-->
+
+<body data-page="About" data-3d-enabled="true">
+
+    <!-- This div is the target for the Three.js canvas -->
+    <div id="three-container"></div>
+
+    <!-- This div will be filled by layout.js -->
+    <div id="header-container"></div>
+
+    <!-- Main Page Content -->
+    <main class="relative z-10 py-24 sm:py-32 px-4">
+        <div class="max-w-7xl mx-auto">
+
+            <!-- Hero Section -->
+            <div class="text-center mb-40 reveal-hidden">
+                <h1 class="tt-page-hero-title text-6xl md:text-9xl font-black mb-6 tracking-tighter text-white uppercase leading-none">
+                    Digital<br><span class="text-white">Architects</span>
+                </h1>
+                <p class="text-[10px] font-black text-white/50 uppercase tracking-[0.5em] mt-8 opacity-50 reveal-hidden"
+                    style="transition-delay: 0.2s;">
+                    Collective Intelligence // Protocol v4.0
+                </p>
+                <p class="text-xl md:text-2xl text-white/60 max-w-3xl mx-auto mt-12 font-medium leading-relaxed reveal-hidden"
+                    style="transition-delay: 0.4s;">
+                    A syndicate of visionary engineers, designers, and strategists dedicated to architecting the digital
+                    frontier.
+                </p>
+            </div>
+
+            <!-- Our Mission Section -->
+            <section class="mb-40">
+                <div class="grid md:grid-cols-2 gap-20 items-center">
+                    <div
+                        class="iphone-glass p-12 sm:p-20 order-2 md:order-1 reveal-hidden rounded-[4rem] border border-white/5 shadow-3xl">
+                        <h2
+                            class="text-4xl sm:text-6xl font-black mb-10 text-white tracking-tighter uppercase leading-none">
+                            Our<br><span class="text-white/30">Mission</span></h2>
+                        <div class="space-y-8">
+                            <p class="text-lg text-gray-400 font-medium leading-relaxed opacity-70">
+                                To architect digital ecosystems that are not only powerful and scalable but also
+                                intuitive and aesthetic. We believe in the transformative power of high-fidelity
+                                engineering.
+                            </p>
+                            <p class="text-lg text-gray-400 font-medium leading-relaxed opacity-70">
+                                We bridge the gap between ambitious concepts and market-active reality, acting as your
+                                primary partner in digital evolution.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="text-center order-1 md:order-2 reveal-hidden" style="transition-delay: 0.2s;">
+                        <div
+                            class="w-72 h-72 md:w-96 md:h-96 mx-auto rounded-[4rem] iphone-glass flex items-center justify-center border border-white/10 shadow-3xl">
+                            <i data-lucide="target" class="w-24 h-24 md:w-32 md:h-32 text-white"></i>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Meet the Team Section -->
+            <section>
+                <div class="text-center mb-24">
+                    <h2 class="text-[10px] font-black text-white/30 uppercase tracking-[0.5em] mb-12 reveal-hidden">Team
+                        Architects</h2>
+                </div>
+
+                <div id="team-grid" class="grid grid-cols-1 md:grid-cols-3 gap-10"></div>
+            </section>
+
+        </div>
+    </main>
+    <!-- This div will be filled by layout.js -->
+    <div id="footer-container"></div>
+
+    <!-- All old <style> and <script> content is gone. -->
+
+</body>
+
+</html>

@@ -1,0 +1,28 @@
+{
+  "name": "tech-turf-frontend",
+  "version": "2.0.0",
+  "description": "Tech Turf E-commerce Frontend",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx http-server -p 3601",
+    "dev": "npx live-server --port=3601",
+    "build:css": "tailwindcss -c ../tailwind.config.js -i ./src/css/tailwind.input.css -o ./src/css/tailwind.generated.css --minify",
+    "build": "npm run build:css && echo 'Static site ready for deployment'",
+    "deploy": "echo 'Ready for deployment'"
+  },
+  "keywords": [
+    "ecommerce",
+    "tech-turf",
+    "frontend",
+    "html",
+    "css",
+    "javascript"
+  ],
+  "author": "Tech Turf Team",
+  "license": "ISC",
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "live-server": "^1.2.2",
+    "tailwindcss": "^3.4.17"
+  }
+}

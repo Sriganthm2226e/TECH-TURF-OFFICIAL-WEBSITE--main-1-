@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tech Turf - Extras & Custom Requests</title>
+
+    <!-- External Libraries -->
+    <link rel="stylesheet" href="/src/css/tailwind.generated.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Our New Centralized Files -->
+    <link rel="stylesheet" href="/src/css/pages/style.css">
+    <script src="/src/js/core/layout.js" defer></script>
+</head>
+
+<body data-page="Extras" data-3d-enabled="true">
+
+    <div id="three-container"></div>
+    <div id="header-container"></div>
+
+    <main class="relative z-10 py-24 sm:py-32 px-4 min-h-screen flex flex-col items-center">
+        <div class="max-w-4xl mx-auto w-full">
+
+            <!-- Title -->
+            <div class="text-center mb-16 reveal-hidden">
+                <h1
+                    class="tt-page-hero-title text-5xl md:text-8xl font-black mb-4 tracking-tighter text-white uppercase leading-none">
+                    Beyond<br><span class="text-[#d2670e]">Standard</span>
+                </h1>
+                <p class="text-[10px] font-black text-white/50 uppercase tracking-[0.5em] mt-8 [transition-delay:0.1s]">
+                    Custom Deployments // Bespoke Integrations
+                </p>
+                <p class="text-lg md:text-xl text-gray-400 font-medium max-w-2xl mx-auto mt-8 leading-relaxed">
+                    Need an extra module, a specific API integration, or an untemplated feature? Describe your unique
+                    requirements below and our engineering team will architect it seamlessly into your order.
+                </p>
+            </div>
+
+            <!-- Custom Request Form -->
+            <div
+                class="iphone-glass p-8 sm:p-12 rounded-[2.5rem] border border-white/10 shadow-2xl reveal-hidden mx-auto w-full max-w-3xl [transition-delay:0.2s]">
+                <form id="extras-request-form" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label for="req-project"
+                                class="text-[10px] uppercase tracking-widest font-black text-white/50 px-2">Project
+                                Reference</label>
+                            <input type="text" id="req-project" title="Project Reference"
+                                placeholder="Current project name or ID"
+                                class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 outline-none focus:border-[#d2670e] transition-colors">
+                        </div>
+                        <div class="space-y-2">
+                            <label for="req-category"
+                                class="text-[10px] uppercase tracking-widest font-black text-white/50 px-2">Extra
+                                Category</label>
+                            <select id="req-category" title="Extra Category"
+                                class="w-full bg-[rgba(8,14,38,0.9)] border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-[#d2670e] transition-colors appearance-none cursor-pointer">
+                                <option value="api">Custom API Integration</option>
+                                <option value="ui">Bespoke UI Component</option>
+                                <option value="db">Advanced Database Architecture</option>
+                                <option value="security">Enterprise Security Ops</option>
+                                <option value="other">Other Unique Feature</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="req-repo-link"
+                            class="text-[10px] uppercase tracking-widest font-black text-white/50 px-2">Attach
+                            repository link in here</label>
+                        <input type="url" id="req-repo-link" title="Repository Link"
+                            placeholder="https://github.com/username/repository"
+                            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 outline-none focus:border-[#d2670e] transition-colors">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="req-action"
+                            class="text-[10px] uppercase tracking-widest font-black text-white/50 px-2">Specify the
+                            action to be done</label>
+                        <input type="text" id="req-action" title="Action to execute"
+                            placeholder="What specific action needs to be executed on the material?"
+                            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 outline-none focus:border-[#d2670e] transition-colors">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="req-details"
+                            class="text-[10px] uppercase tracking-widest font-black text-white/50 px-2">Detailed
+                            Specifications</label>
+                        <textarea id="req-details" rows="5" title="Detailed specifications box"
+                            placeholder="Specify exactly what you need built, integrated, or modified. We will reach back with a custom quote..."
+                            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 outline-none focus:border-[#d2670e] transition-colors"></textarea>
+                    </div>
+
+                    <div class="pt-4 text-center">
+                        <button type="submit"
+                            class="w-full md:w-auto px-12 py-4 bg-[#d2670e] hover:bg-[#b0550b] text-white text-xs font-black uppercase tracking-[0.2em] rounded-xl transition-all shadow-[0_0_20px_rgba(210,103,14,0.3)] hover:shadow-[0_0_30px_rgba(210,103,14,0.5)]">
+                            Submit Request
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <div id="footer-container"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('extras-request-form');
+            if (form) {
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    if (window.showMessage) {
+                        window.showMessage('success', 'Custom specification submitted to the Engineering Bay!');
+                        form.reset();
+                    } else {
+                        alert("Custom specification submitted!");
+                        form.reset();
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

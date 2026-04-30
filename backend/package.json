@@ -1,0 +1,38 @@
+{
+    "name": "tech-turf-unified-backend",
+    "version": "1.0.0",
+    "description": "Unified backend server for the Tech Turf ecosystem",
+    "main": "server.js",
+    "type": "module",
+    "scripts": {
+        "start": "node server.js",
+        "dev": "nodemon server.js",
+        "script:db:check": "node scripts/db/check-db.js",
+        "script:db:fix": "node scripts/db/fix-db.js",
+        "script:db:inspect-users": "node scripts/db/inspect-users.js",
+        "script:admin:reset": "node scripts/admin/reset-admin.js",
+        "script:test:brand": "node scripts/tests/test-brand.js",
+        "script:test:login-api": "node scripts/tests/test-login-api.js",
+        "script:test:nexus": "node scripts/tests/test-nexus.js"
+    },
+    "dependencies": {
+        "@google/generative-ai": "^0.24.1",
+        "axios": "^1.6.8",
+        "bcryptjs": "^2.4.3",
+        "cors": "^2.8.5",
+        "dotenv": "^16.4.5",
+        "express": "^4.19.2",
+        "google-auth-library": "^9.10.0",
+        "jsonwebtoken": "^9.0.2",
+        "multer": "^2.1.1",
+        "node-fetch": "^3.3.2",
+        "nodemailer": "^6.9.13",
+        "os-utils": "^0.0.14",
+        "socket.io": "^4.8.3",
+        "sqlite": "^5.1.1",
+        "sqlite3": "^5.1.7"
+    },
+    "devDependencies": {
+        "nodemon": "^3.1.0"
+    }
+}
