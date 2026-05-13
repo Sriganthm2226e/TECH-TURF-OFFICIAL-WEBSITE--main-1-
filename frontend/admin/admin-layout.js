@@ -75,25 +75,51 @@ function ensureSEO() {
 }
 
 // --- Auth Check ---
-function checkAuth() {
-    const token = localStorage.getItem('tt_token');
+async function checkAuth() {
+    const token = localStorage.getItem('tt_admin_token') || localStorage.getItem('tt_token');
     if (!token) {
         console.log('[AUTH CHECK] No token found in localStorage');
         console.log('[AUTH CHECK] localStorage keys:', Object.keys(localStorage));
-        window.location.href = '/pages/login.html';
+        window.location.href = '/admin/admin-login.html';
         return null;
     }
 
     const tokenPayload = parseJwtPayload(token);
-    if (!isPrivilegedAdminRole(tokenPayload?.role)) {
+    const hasAdminRole = isPrivilegedAdminRole(tokenPayload?.role) || tokenPayload?.isAdmin === true;
+    if (!hasAdminRole) {
         console.log('[AUTH CHECK] Token is not an admin token.');
-        window.location.href = '/pages/login.html';
+        window.location.href = '/admin/admin-login.html';
         return null;
     }
 
-    console.log('[AUTH CHECK] Token found:', token.substring(0, 20) + '...');
-    // In a real app, we would verify the token/role with the backend here
+    // Verify token with backend
+    const verified = await verifyTokenWithBackend(token);
+    if (!verified) {
+        console.log('[AUTH CHECK] Server verification failed');
+        window.location.href = '/admin/admin-login.html';
+        return null;
+    }
+
+    console.log('[AUTH CHECK] Token verified and authorized');
     return token;
+}
+
+// Helper to verify token with backend
+async function verifyTokenWithBackend(token) {
+    try {
+        const response = await fetch(`${window.API_BASE_URL}/admin/validate`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        if (!response.ok) return false;
+        const data = await response.json();
+        return data.valid === true;
+    } catch (err) {
+        console.error('Error verifying token:', err);
+        return false;
+    }
 }
 
 // --- Sidebar Generation ---
@@ -154,15 +180,19 @@ function renderSidebar() {
     if (window.lucide) lucide.createIcons();
 
     document.getElementById('logout-button').addEventListener('click', () => {
+        localStorage.removeItem('tt_admin_token');
         localStorage.removeItem('tt_token');
-        window.location.href = '/pages/login.html';
+        window.location.href = '/admin/admin-login.html';
     });
 }
 
 // --- Topbar Generation ---
 function renderTopbar() {
     const topbar = document.getElementById('topbar-container');
-    if (!topbar) return;
+    // Apply premium gradient background to topbar container
+if (!topbar) return;
+
+topbar.classList.add('bg-gradient-to-r','from-indigo-600','via-purple-600','to-pink-600','p-4','rounded-xl','iphone-glass','transition-all','duration-300');
 
     const currentPath = window.location.pathname.split('/').pop();
     let title = 'Admin Dashboard';
@@ -185,24 +215,67 @@ function renderTopbar() {
     topbar.innerHTML = `
         <h2 class="text-xl font-black text-white tracking-tight" id="page-title">${title}</h2>
         <div class="flex items-center space-x-6">
-            <button class="relative text-gray-400 hover:text-white transition-colors">
-                <i data-lucide="bell" class="w-6 h-6"></i>
-                <span class="absolute top-0 right-0 w-2 h-2 bg-white rounded-full"></span>
+            <button class="relative text-gray-400 hover:text-white transition-colors" id="dark-mode-toggle">
+                <i data-lucide="moon" class="w-6 h-6"></i>
             </button>
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl iphone-glass border border-white/10 flex items-center justify-center text-sm font-bold text-white">
+            <button class="relative text-gray-400 hover:text-white transition-colors" id="notification-button">
+                <i data-lucide="bell" class="w-6 h-6"></i>
+                <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+            </button>
+            <div class="relative">
+                <button id="avatar-btn" class="w-10 h-10 rounded-xl iphone-glass border border-white/10 flex items-center justify-center text-sm font-bold text-white">
                     AD
+                </button>
+                <div id="avatar-menu" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg py-2 z-10">
+                    <a href="/admin/profile.html" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Profile</a>
+                    <button id="avatar-logout-button" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Log Out</button>
                 </div>
             </div>
         </div>
     `;
 
     if (window.lucide) lucide.createIcons();
+
+// Dark mode toggle logic
+const dmToggle = document.getElementById('dark-mode-toggle');
+if (dmToggle) {
+    dmToggle.addEventListener('click', () => {
+        document.documentElement.classList.toggle('dark');
+        const isDark = document.documentElement.classList.contains('dark');
+        const icon = dmToggle.querySelector('i');
+        icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+        if (window.lucide) lucide.createIcons();
+    });
+}
+
+// Avatar menu logic
+const avatarBtn = document.getElementById('avatar-btn');
+const avatarMenu = document.getElementById('avatar-menu');
+if (avatarBtn && avatarMenu) {
+    avatarBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        avatarMenu.classList.toggle('hidden');
+    });
+    document.addEventListener('click', () => {
+        avatarMenu.classList.add('hidden');
+    });
+    // Logout from avatar menu
+    const avatarLogout = document.getElementById('avatar-logout-button');
+    if (avatarLogout) {
+        avatarLogout.addEventListener('click', () => {
+            localStorage.removeItem('tt_admin_token');
+            localStorage.removeItem('tt_token');
+            window.location.href = '/admin/admin-login.html';
+        });
+    }
+}
+
 }
 
 // --- Core Initialization ---
-document.addEventListener('DOMContentLoaded', () => {
-    if (checkAuth()) {
+document.addEventListener('DOMContentLoaded', async () => {
+    const token = await checkAuth();
+    if (token) {
         renderSidebar();
         renderTopbar();
     }

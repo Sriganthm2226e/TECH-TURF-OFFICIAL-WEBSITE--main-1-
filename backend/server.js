@@ -28,6 +28,8 @@ import enhancedAdminRoutes from './routes/enhanced-admin-routes.js';
 import systemSettingsRoutes from './routes/system-settings-routes.js';
 import adminIntegrationRoutes from './routes/admin-integration-routes.js';
 import announcementRoutes from './routes/announcement-routes.js';
+import adminAuthRoutes from './routes/adminAuthRoutes.js';
+import { initAdminModel } from './models/Admin.js';
 
 dotenv.config();
 
@@ -77,6 +79,8 @@ let db;
 try {
     db = await initDatabase();
     console.log('Database connected and verified.');
+    await initAdminModel(db);
+    console.log('Admin model/schema initialized successfully.');
 } catch (error) {
     console.error('CRITICAL ERROR: Failed to initialize database!', error);
     process.exit(1);
@@ -106,6 +110,7 @@ app.use('/api/stats', statsRoutes);
 app.use('/api/admin/stats', statsRoutes); // Map for frontend dashboard compatibility
 app.use('/api/admin', statsRoutes); // General admin mapping
 app.use('/api', websiteRoutes); // Products, Orders, Promos, Announcements, Media
+app.use('/api/admin', adminAuthRoutes); // New Admin Authentication Routes
 app.use('/api/admin', enhancedAdminRoutes); // Enhanced Admin Features
 app.use('/api/admin/system-settings', systemSettingsRoutes); // System Settings
 app.use('/api/admin/integration', adminIntegrationRoutes); // Admin Integration & Testing
@@ -131,6 +136,13 @@ app.get('/', (req, res) => {
     }
 
     return res.json({ message: 'Tech Turf Unified Backend is running...' });
+});
+
+app.get('/admin-login', (req, res) => {
+    if (SHOULD_SERVE_FRONTEND) {
+        return res.sendFile(path.join(FRONTEND_ROOT, 'admin', 'admin-login.html'));
+    }
+    return res.redirect(302, `${FRONTEND_BASE_URL}/admin/admin-login.html`);
 });
 
 // Convenience redirects for local development when frontend routes are opened on backend port.

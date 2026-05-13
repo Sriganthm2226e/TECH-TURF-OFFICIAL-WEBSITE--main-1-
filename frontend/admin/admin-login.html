@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Tech Turf - Admin Control Access</title>
+
+    <!-- External Libraries -->
+    <link rel="stylesheet" href="/src/css/tailwind.generated.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Style Centralization -->
+    <link rel="stylesheet" href="/src/css/pages/style.css">
+    <link rel="stylesheet" href="admin.css">
+    <link rel="icon" type="image/png" href="https://techturf.com/favicon.png">
+
+    <style>
+        body {
+            background-color: #020208;
+            overflow-x: hidden;
+            overflow-y: auto;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding: clamp(16px, 3.5vh, 40px) 12px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* 3D Nebula Background */
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100dvh;
+            z-index: 1;
+            background: radial-gradient(circle at center, #050b1a 0%, #000003 100%);
+        }
+
+        .auth-container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 480px;
+            padding: clamp(10px, 2vw, 24px);
+            perspective: 2000px;
+        }
+
+        .auth-card {
+            padding: clamp(28px, 5vw, 64px) clamp(20px, 4vw, 48px);
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            background: rgba(10, 15, 30, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 50px 100px rgba(0, 0, 0, 0.8), 
+                        0 0 50px rgba(0, 242, 254, 0.05);
+        }
+
+        /* Method Selector (Toggle option) */
+        .method-selector {
+            display: flex;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 4px;
+            border-radius: 1.25rem;
+            margin-bottom: 32px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .method-btn {
+            flex: 1;
+            padding: 12px 16px;
+            border-radius: 1rem;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.4);
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 2;
+            outline: none;
+        }
+
+        .method-btn.active {
+            color: #000;
+            background: #fff;
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.15);
+        }
+
+        /* Inputs */
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 18px 24px;
+            padding-left: 60px;
+            padding-right: 60px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 1.25rem;
+            color: white;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            outline: none;
+            letter-spacing: 0.5px;
+        }
+
+        .input-group input:focus {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(0, 242, 254, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 242, 254, 0.1);
+        }
+
+        .input-group .absolute-icon {
+            position: absolute;
+            left: 22px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.25);
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 20;
+            width: 18px;
+            height: 18px;
+        }
+
+        .input-group input:focus~.absolute-icon {
+            color: #00f2fe;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .input-group .toggle-password {
+            position: absolute;
+            right: 22px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.25);
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 30;
+            background: none;
+            border: none;
+            padding: 0;
+            outline: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .input-group .toggle-password:hover {
+            color: white;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        /* Buttons & Extras */
+        .auth-btn {
+            width: 100%;
+            padding: 18px;
+            background: #fff;
+            color: #000;
+            border-radius: 1.25rem;
+            font-weight: 900;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            text-transform: uppercase;
+            letter-spacing: 0.25em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            border: none;
+            margin-top: 24px;
+        }
+
+        .auth-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(0, 242, 254, 0.2);
+            background: #00f2fe;
+            color: #000;
+        }
+
+        .auth-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .auth-title {
+            font-size: clamp(2rem, 6vw, 3.5rem);
+            letter-spacing: -0.04em;
+        }
+
+        /* Custom Checkbox */
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            user-select: none;
+            cursor: pointer;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.4);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: color 0.3s;
+        }
+
+        .checkbox-container:hover {
+            color: white;
+        }
+
+        .checkbox-container input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+
+        .checkmark {
+            position: relative;
+            display: inline-block;
+            height: 18px;
+            width: 18px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            margin-right: 10px;
+            transition: all 0.3s;
+        }
+
+        .checkbox-container input:checked ~ .checkmark {
+            background: #00f2fe;
+            border-color: #00f2fe;
+            box-shadow: 0 0 10px rgba(0, 242, 254, 0.3);
+        }
+
+        .checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+            left: 6px;
+            top: 2px;
+            width: 4px;
+            height: 9px;
+            border: solid black;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .checkbox-container input:checked ~ .checkmark:after {
+            display: block;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(0, 0, 0, 0.1);
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Toast Container */
+        #toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-col: column;
+            gap: 12px;
+            pointer-events: none;
+        }
+
+        .toast-item {
+            padding: 16px 24px;
+            border-radius: 1.25rem;
+            backdrop-filter: blur(20px);
+            background: rgba(10, 10, 20, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: auto;
+        }
+
+        .toast-item.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast-success {
+            border-left: 4px solid #10b981;
+        }
+
+        .toast-error {
+            border-left: 4px solid #ef4444;
+        }
+
+        .toast-info {
+            border-left: 4px solid #00f2fe;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 3D Particle Space Background -->
+    <div id="canvas-container"></div>
+
+    <!-- Admin Login Container -->
+    <div class="auth-container">
+        <div class="auth-card tilt-element text-center rounded-[3rem] border border-white/5 shadow-3xl">
+            <div
+                class="inline-flex items-center gap-3 px-5 py-2.5 rounded-full border border-white/10 background:rgba(255,255,255,0.02) text-[#00f2fe] text-[9px] font-black tracking-[0.3em] mb-10 animate-float uppercase">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#00f2fe] animate-pulse"></span>
+                Admin Protocol v3.0
+            </div>
+
+            <h1 class="auth-title font-black tracking-tighter text-white uppercase leading-none mb-3">
+                System<br><span class="text-white/20">Control</span>
+            </h1>
+            <p class="text-white/40 text-center mb-10 text-[10px] font-black tracking-[0.3em] uppercase mt-2">
+                Decentralized Secure Console
+            </p>
+
+            <!-- Login Toggle / Option Selection -->
+            <div class="method-selector">
+                <button type="button" class="method-btn active" id="btn-username" onclick="switchMethod('username')">Username</button>
+                <button type="button" class="method-btn" id="btn-gmail" onclick="switchMethod('gmail')">Gmail ID</button>
+            </div>
+
+            <!-- Form -->
+            <form id="admin-login-form" class="space-y-5 text-left">
+                <!-- Username Field Container -->
+                <div class="input-group" id="username-group">
+                    <input type="text" id="adminName" placeholder="Admin Username" autocomplete="username"
+                        class="glass-input">
+                    <i data-lucide="shield-alert" class="absolute-icon"></i>
+                </div>
+
+                <!-- Gmail Field Container (Hidden by default) -->
+                <div class="input-group hidden" id="gmail-group">
+                    <input type="email" id="gmail" placeholder="Gmail Address" autocomplete="email"
+                        class="glass-input">
+                    <i data-lucide="mail" class="absolute-icon"></i>
+                </div>
+
+                <!-- Password Field -->
+                <div class="input-group">
+                    <input type="password" id="password" required placeholder="Security Access Key" autocomplete="current-password"
+                        class="glass-input">
+                    <i data-lucide="key-round" class="absolute-icon"></i>
+                    <button type="button" class="toggle-password" onclick="togglePasswordVisibility()">
+                        <i data-lucide="eye" id="password-eye-icon" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <!-- Extras: Remember Me & Forgot Password -->
+                <div class="flex justify-between items-center py-2 px-2 text-sm">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="remember-me">
+                        <span class="checkmark"></span>
+                        Remember Me
+                    </label>
+                    <a href="#" onclick="handleForgotPassword(event)"
+                        class="text-[10px] text-white/20 hover:text-white/40 transition-colors uppercase tracking-widest font-black">Lost Key?</a>
+                </div>
+
+                <!-- Action Button -->
+                <button type="submit" id="submit-btn" class="auth-btn">
+                    <span class="spinner" id="btn-spinner"></span>
+                    <span id="btn-text">Establish Uplink</span>
+                    <i data-lucide="terminal" id="btn-icon" class="w-4 h-4"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container"></div>
+
+    <script>
+        // --- 3D Space Particle Engine (Three.js) ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x020208, 0.0012);
+
+        const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 3000);
+        camera.position.z = 1000;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+
+        // Circular smooth particle texture
+        function createParticleTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 32;
+            canvas.height = 32;
+            const ctx = canvas.getContext('2d');
+            const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+            gradient.addColorStop(0, 'rgba(255,255,255,1)');
+            gradient.addColorStop(0.2, 'rgba(0,242,254,0.8)');
+            gradient.addColorStop(0.6, 'rgba(0,100,255,0.2)');
+            gradient.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 32, 32);
+            const texture = new THREE.Texture(canvas);
+            texture.needsUpdate = true;
+            return texture;
+        }
+
+        const particleTexture = createParticleTexture();
+
+        // Admin Space Dust
+        const dustGeometry = new THREE.BufferGeometry();
+        const dustCount = 3000;
+        const dustPositions = [];
+        const dustColors = [];
+        const tealColor = new THREE.Color('#00f2fe');
+        const blueColor = new THREE.Color('#3b82f6');
+        const whiteColor = new THREE.Color('#ffffff');
+
+        for (let i = 0; i < dustCount; i++) {
+            dustPositions.push((Math.random() - 0.5) * 2800, (Math.random() - 0.5) * 2800, (Math.random() - 0.5) * 2800);
+            
+            const r = Math.random();
+            const color = r < 0.4 ? tealColor : r < 0.8 ? blueColor : whiteColor;
+            dustColors.push(color.r, color.g, color.b);
+        }
+
+        dustGeometry.setAttribute('position', new THREE.Float32BufferAttribute(dustPositions, 3));
+        dustGeometry.setAttribute('color', new THREE.Float32BufferAttribute(dustColors, 3));
+
+        const dustMaterial = new THREE.PointsMaterial({
+            size: 6,
+            map: particleTexture,
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.75,
+            depthWrite: false,
+            blending: THREE.AdditiveBlending
+        });
+
+        const dustField = new THREE.Points(dustGeometry, dustMaterial);
+        scene.add(dustField);
+
+        // Slow Rotation Matrix
+        let mouseX = 0, mouseY = 0;
+        document.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX - window.innerWidth / 2);
+            mouseY = (e.clientY - window.innerHeight / 2);
+
+            // Subtle cards 3D tilt
+            const card = document.querySelector('.tilt-element');
+            if (card) {
+                const xAxis = (window.innerWidth / 2 - e.pageX) / 45;
+                const yAxis = (window.innerHeight / 2 - e.pageY) / 45;
+                card.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+            }
+        });
+
+        function renderFrame() {
+            requestAnimationFrame(renderFrame);
+            dustField.rotation.y += 0.0002;
+            dustField.rotation.x += 0.0001;
+            camera.position.x += (mouseX * 0.15 - camera.position.x) * 0.025;
+            camera.position.y += (-mouseY * 0.15 - camera.position.y) * 0.025;
+            camera.lookAt(scene.position);
+            renderer.render(scene, camera);
+        }
+        renderFrame();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // --- Custom Toast Notifications ---
+        function triggerToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const item = document.createElement('div');
+            item.className = `toast-item toast-${type}`;
+            
+            let iconName = 'info';
+            if (type === 'success') iconName = 'check-circle-2';
+            else if (type === 'error') iconName = 'alert-triangle';
+
+            item.innerHTML = `
+                <i data-lucide="${iconName}" style="color: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#00f2fe'}"></i>
+                <span>${message}</span>
+            `;
+            container.appendChild(item);
+            if (window.lucide) lucide.createIcons();
+
+            // Animate In
+            setTimeout(() => item.classList.add('show'), 50);
+
+            // Remove
+            setTimeout(() => {
+                item.classList.remove('show');
+                item.addEventListener('transitionend', () => item.remove());
+            }, 3500);
+        }
+
+        // --- Auth & Interaction Controller ---
+        let currentMethod = 'username'; // username | gmail
+
+        function switchMethod(method) {
+            if (currentMethod === method) return;
+            currentMethod = method;
+
+            const btnUser = document.getElementById('btn-username');
+            const btnGmail = document.getElementById('btn-gmail');
+            const groupUser = document.getElementById('username-group');
+            const groupGmail = document.getElementById('gmail-group');
+            const inputUser = document.getElementById('adminName');
+            const inputGmail = document.getElementById('gmail');
+
+            if (method === 'username') {
+                btnUser.classList.add('active');
+                btnGmail.classList.remove('active');
+                groupUser.classList.remove('hidden');
+                groupGmail.classList.add('hidden');
+                inputUser.required = true;
+                inputGmail.required = false;
+                inputGmail.value = '';
+            } else {
+                btnUser.classList.remove('active');
+                btnGmail.classList.add('active');
+                groupUser.classList.add('hidden');
+                groupGmail.classList.remove('hidden');
+                inputUser.required = false;
+                inputGmail.required = true;
+                inputUser.value = '';
+            }
+        }
+
+        function togglePasswordVisibility() {
+            const input = document.getElementById('password');
+            const icon = document.getElementById('password-eye-icon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.setAttribute('data-lucide', 'eye-off');
+            } else {
+                input.type = 'password';
+                icon.setAttribute('data-lucide', 'eye');
+            }
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function handleForgotPassword(e) {
+            e.preventDefault();
+            triggerToast('Uplink reset protocol initiated. Please contact System Admin.', 'info');
+        }
+
+        // Remember Me & Form Submission
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide) lucide.createIcons();
+
+            // Retrieve API path safely
+            const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+                ? 'http://localhost:5000/api'
+                : window.location.origin + '/api';
+
+            // Auto populate fields if remember-me was saved
+            const savedMethod = localStorage.getItem('tt_admin_remember_method');
+            const savedIdentity = localStorage.getItem('tt_admin_remember_identity');
+            
+            if (savedMethod) {
+                switchMethod(savedMethod);
+                document.getElementById('remember-me').checked = true;
+                if (savedMethod === 'username') {
+                    document.getElementById('adminName').value = savedIdentity || '';
+                } else {
+                    document.getElementById('gmail').value = savedIdentity || '';
+                }
+            }
+
+            const loginForm = document.getElementById('admin-login-form');
+            const submitBtn = document.getElementById('submit-btn');
+            const btnSpinner = document.getElementById('btn-spinner');
+            const btnIcon = document.getElementById('btn-icon');
+            const btnText = document.getElementById('btn-text');
+
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                // Loading visual states
+                submitBtn.disabled = true;
+                btnSpinner.style.display = 'block';
+                btnIcon.style.display = 'none';
+                btnText.textContent = 'Verifying Credentials...';
+
+                const username = document.getElementById('adminName').value.trim();
+                const gmail = document.getElementById('gmail').value.trim();
+                const password = document.getElementById('password').value;
+                const rememberMe = document.getElementById('remember-me').checked;
+
+                const requestBody = {
+                    loginType: currentMethod,
+                    password
+                };
+
+                if (currentMethod === 'username') {
+                    requestBody.username = username;
+                } else {
+                    requestBody.gmail = gmail;
+                }
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/admin/login`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.message || 'Access Denied: Invalid parameters.');
+                    }
+
+                    // Store credentials in localStorage if Remember Me is checked
+                    if (rememberMe) {
+                        localStorage.setItem('tt_admin_remember_method', currentMethod);
+                        localStorage.setItem('tt_admin_remember_identity', currentMethod === 'username' ? username : gmail);
+                    } else {
+                        localStorage.removeItem('tt_admin_remember_method');
+                        localStorage.removeItem('tt_admin_remember_identity');
+                    }
+
+                    // Success Feedback
+                    triggerToast('Access Authorized! Synchronizing telemetry...', 'success');
+                    
+                    // Save Token
+                    localStorage.setItem('tt_admin_token', data.token);
+                    localStorage.setItem('tt_token', data.token); // Sync existing user token for backward compatibility in dashboard
+                    localStorage.setItem('tt_user', JSON.stringify({
+                        id: data.adminData.id,
+                        name: data.adminData.adminName,
+                        email: data.adminData.gmail,
+                        role: data.adminData.role,
+                        isAdmin: true
+                    }));
+
+                    setTimeout(() => {
+                        window.location.href = '/admin/index.html';
+                    }, 1200);
+
+                } catch (err) {
+                    triggerToast(err.message, 'error');
+                    submitBtn.disabled = false;
+                    btnSpinner.style.display = 'none';
+                    btnIcon.style.display = 'block';
+                    btnText.textContent = 'Establish Uplink';
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
